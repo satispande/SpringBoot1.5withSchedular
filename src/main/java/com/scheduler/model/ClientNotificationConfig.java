@@ -5,12 +5,16 @@ import java.util.Date;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
+import org.hibernate.validator.constraints.NotEmpty;
+
 @Entity
 public class ClientNotificationConfig {
 
 	@Id
 	private String clientId;
+	
 	private String modules; // Comma Seperated modules
+	
 	private String frequency;
 	private String fromDate;
 	private String toDate;

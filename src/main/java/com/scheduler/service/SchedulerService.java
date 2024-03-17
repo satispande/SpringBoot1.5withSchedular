@@ -1,10 +1,8 @@
 package com.scheduler.service;
 
 import java.text.SimpleDateFormat;
-import java.time.LocalDate;
-import java.time.YearMonth;
-import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
@@ -16,7 +14,6 @@ import com.scheduler.model.ClientNotificationConfig;
 import com.scheduler.model.PartDefiningAttributeEntity;
 import com.scheduler.model.PartDescriptiveAttributeEntity;
 import com.scheduler.model.PartEntity;
-import com.scheduler.model.Product;
 import com.scheduler.model.ProductSeriesEntity;
 import com.scheduler.model.SyndicationViewEntity;
 import com.scheduler.repository.ClientNotificationConfigRepository;
@@ -50,11 +47,13 @@ public class SchedulerService {
 	}
 
 	private void sendCurrentDateEmail(List<ClientNotificationConfig> configsWeekly) throws Exception {
-		// Get the current date
-		LocalDate currentDate = LocalDate.now();
-		currentDate=currentDate.minusDays(1);
-		// Convert LocalDate to Date
-		Date input = Date.from(currentDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+	
+		 // Get the current date
+        Calendar calendar = Calendar.getInstance();
+        setZeroTime(calendar);
+        // Convert Calendar to Date
+        Date input = calendar.getTime();
+	//	Date input = Date.from(currentDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
 
 		for (ClientNotificationConfig config : configsWeekly) {
 
@@ -113,20 +112,31 @@ public class SchedulerService {
 		// List<ClientNotificationConfig> configs = configRepository.findAll();
 		List<ClientNotificationConfig> configsWeekly = configRepository.findByFrequency("weekly");
 
-		// Get the current date
-		LocalDate currentDate = LocalDate.now();
+		 // Get the current date
+       Calendar calendar = Calendar.getInstance();
+       // Set time to midnight
+       setZeroTime(calendar);
 
 		// Subtract 7 days from the current date
-		LocalDate dateSevenDaysAgo = currentDate.minusDays(7);
-
-		// Convert LocalDate to Date
-		sendEmailOnRange(configsWeekly, currentDate, dateSevenDaysAgo);
+       Calendar sevenDaysOldDaye = Calendar.getInstance();
+       sevenDaysOldDaye.add(Calendar.DAY_OF_MONTH, -7);
+       setZeroTime(sevenDaysOldDaye);
+       // Convert Calendar to Date
+    
+		sendEmailOnRange(configsWeekly, calendar.getTime(), sevenDaysOldDaye.getTime());
 	}
 
-	private void sendEmailOnRange(List<ClientNotificationConfig> configsWeekly, LocalDate currentDate,
-			LocalDate dateSevenDaysAgo) throws Exception {
-		Date startDate = Date.from(dateSevenDaysAgo.atStartOfDay(ZoneId.systemDefault()).toInstant());
-		Date endDate = Date.from(currentDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+	private void setZeroTime(Calendar calendar) {
+		calendar.set(Calendar.HOUR_OF_DAY, 0);
+		   calendar.set(Calendar.MINUTE, 0);
+		   calendar.set(Calendar.SECOND, 0);
+		   calendar.set(Calendar.MILLISECOND, 0);
+	}
+
+	private void sendEmailOnRange(List<ClientNotificationConfig> configsWeekly, Date endDate,
+			Date startDate) throws Exception {
+	//	Date startDate = Date.from(dateSevenDaysAgo.atStartOfDay(ZoneId.systemDefault()).toInstant());
+	//	Date endDate = currentDate;
 
 		for (ClientNotificationConfig config : configsWeekly) {
 
@@ -197,22 +207,29 @@ public class SchedulerService {
 
 	@Scheduled(cron = "0 59 23 * * *")
 	public void sendMonthlyNotifications() throws Exception {
-		// Determine the current date
-		LocalDate currentDate = LocalDate.now();
+		
+		  // Get the current date
+        Calendar currentDate = Calendar.getInstance();
+        setZeroTime(currentDate);
+        // Get the last day of the current month
+        Calendar lastDayOfMonth = (Calendar) currentDate.clone();
+        lastDayOfMonth.set(Calendar.DAY_OF_MONTH, lastDayOfMonth.getActualMaximum(Calendar.DAY_OF_MONTH));
+        
+        setZeroTime(lastDayOfMonth);
 
-		// Get the last day of the current month
-		LocalDate lastDayOfMonth = YearMonth.from(currentDate).atEndOfMonth();
+        // Check if the current date is the last day of the month
+        if (currentDate.get(Calendar.DAY_OF_MONTH) == lastDayOfMonth.get(Calendar.DAY_OF_MONTH)) {
+            // Get first Day of Month
+            Calendar firstDayOfMonth = (Calendar) currentDate.clone();
+            firstDayOfMonth.set(Calendar.DAY_OF_MONTH, 1);
+            
+            setZeroTime(firstDayOfMonth);
+            
+            List<ClientNotificationConfig> configsWeekly = configRepository.findByFrequency("monthly");
 
-		// Check if the current date is the last day of the month
-		if (currentDate.getDayOfMonth() == lastDayOfMonth.getDayOfMonth()) {
-			// Get first Day of Month
-			LocalDate firstDayOfMonth = currentDate.withDayOfMonth(1);
-
-			List<ClientNotificationConfig> configsWeekly = configRepository.findByFrequency("monthly");
-
-			sendEmailOnRange(configsWeekly, firstDayOfMonth, lastDayOfMonth);
-
-		}
+			sendEmailOnRange(configsWeekly, firstDayOfMonth.getTime(), lastDayOfMonth.getTime());
+			
+        }
 
 	}
 

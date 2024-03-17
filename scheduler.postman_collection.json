@@ -1,0 +1,39 @@
+{
+	"info": {
+		"_postman_id": "bca02dda-7235-44f7-ae49-ac8c13bc5f71",
+		"name": "scheduler",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "3069458"
+	},
+	"item": [
+		{
+			"name": "registerClientForNotification",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"clientId\":\"satispande@gmail.com\",\r\n\"modules\":\"marketing,technical,logistics\",\r\n\"frequency\" : \"daily\",\r\n\"fromDate\":\"01/01/2023\",\r\n\"toDate\":\"01/01/2023\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/api/registerClientForNotification",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"registerClientForNotification"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
